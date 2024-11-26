@@ -34,7 +34,7 @@ theme: default
 ---
 
 # Create your first Docker container
-![image](./resources/Untitled.png)
+![image](./resources/dockerfile-image-container.png)
 
 ---
 
