@@ -34,6 +34,7 @@ theme: default
 ---
 
 # Create your first Docker container
+
 ![image](./resources/dockerfile-image-container.png)
 
 ---
@@ -386,7 +387,7 @@ $
 ### Step 5: Build the image
 
 Next we let Docker Compose **prepare** and **build** the **image**.  
-This you can launch through the command  `docker compose build``
+This you can launch through the command  `docker compose build`
 
 ~~~bash
 $ docker compose build
@@ -413,7 +414,7 @@ $
 
 ### Step 6: Build and run the container
 
-To start the service you just defined
+To start the service you just defined you perform the command `docker compose build`
 
 ~~~bash
 $ docker compose up
@@ -431,11 +432,13 @@ demo_application  |  =========|_|==============|___/=/_/_/_/
 demo_application  | 2024-11-25T22:34:19.265Z  INFO 1 --- [demo] [           main] be.demo.docker.hello.DemoApplication     : Started DemoApplication in 1.784 seconds (process running for 2.237)
 ~~~
 
+This will start up your define services
+
 ----
 
 ### Step 7: Stopping the services
 
-In order to stop the service you just perform a ctrl-c, this will stop the service(s) defined in you compose-file.
+In order to stop the service you just perform a **ctrl-c**, this will stop the service(s) defined in you compose-file.
 
 ~~~bash
 Aborting on container exit...
@@ -449,13 +452,13 @@ $
 
 ### Important tip: build and run
 
-So far we need 3 steps:
+So far we need **3 steps**:
 
-* Building your application
+* Building your application with `./gradlew clean build`
 * Building the container through `docker compose build`
 * Starting the services through `docker compose up`
 
-You can however also combine build and run in one command.  
+You can however also **combine** the 2 latest steps (build and run) in one command.  
 The command `docker compose up --build` ensures that you will always rebuild your application.
 
 ----
@@ -511,6 +514,8 @@ ENTRYPOINT ["java","-jar","/app.jar"]
 
 Add a docker-compose.yml
 
+> Don't forget to place the .infra into your .gitignore
+
 ```yaml
 services:
   learning-service:
@@ -547,7 +552,7 @@ services:
     expose:
       - "3306"
     volumes:
-      - ./infra_/mysql/storage/_data:/var/lib/mysql
+      - ./.infra/mysql/storage/_data:/var/lib/mysql
 ```
 
 ---
@@ -712,11 +717,13 @@ second_message
 $
 ~~~
 
+---
+
 ## Part 3: split the compose file to allow for native development
 
 ---
 
-### Create a separate folder
+### Create a separate compose-file for database
 
 * Copy the database-part in a docker-compose-db.yml
 
