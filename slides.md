@@ -11,7 +11,9 @@ theme: default
 
 - JDK
 - IDE
-- [git project](/workspace/personal/k8s-demo/) 
+- git projects
+    - [Docker project](https://github.com/PieterHuybrechts/docker-course-project) 
+    - [Docker compose project](https://github.com/bartvoet/docker-springboot-demo)
 - [docker](https://docs.docker.com/engine/install/)
   - check if docker is running: `docker run hello-world`
  
@@ -30,6 +32,14 @@ theme: default
   - Externalize configuration
   - Split over multiple composes
   
+
+---
+
+# What is Docker
+
+- Containerization platform
+- Package software to be run on any system
+- Env with all dependencies to run our code
 
 ---
 
