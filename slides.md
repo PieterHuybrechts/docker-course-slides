@@ -270,8 +270,8 @@ docker build --build-arg JAR_FILE=build/libs/k8s-demo-0.0.1-SNAPSHOT.jar -t demo
 
 # Docker Compose
 
-- Define multi container applications
-- Centralize configuration in 1 yaml file
+- Define **multi container** applications
+- **Centralize** configuration in 1 yaml file
 - Is **not K8s**, it **lacks** **production**-features like
   - load balancing
   - service discovery
@@ -280,7 +280,7 @@ docker build --build-arg JAR_FILE=build/libs/k8s-demo-0.0.1-SNAPSHOT.jar -t demo
   - relatively **easy** to set up
   - **automates** a lot for **devs**
     - middleware, databases without installation
-    - closest simple thing to production... 
+    - closest **simple** thing to production... 
 
 Let's get started...
 
@@ -288,20 +288,28 @@ Let's get started...
 
 ## Part 1: create a simple application
 
+* Idea is to create: 
+  * A **simple Spring Boot** applciation
+  * Only **1** image/container/**service**
+  * Just to **demonstrate** the mechanics behind Docker Compose
+
+---
+
 ### Step 1: Create a Spring Boot application
 
-* Use the following link to create a simple Spring Boot-app through **Spring Initializr**
+* As a first step let's create a **simple Spring Boot-app**
+* As a starting-point use the following link to create a simple Spring Boot-app through **Spring Initializr**
 
 https://start.spring.io/#!type=gradle-project&language=java&platformVersion=3.4.0&packaging=jar&jvmVersion=21&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=be.demo.docker.hello&dependencies=web
 
-* Click "Generate" and download
-* Import the application into your favorite IDE or editor
+> In Spring Initialzr Click **"Generate"** and **download** and
+> **import** the application into your favorite IDE or editor
 
 ---
 
 ### Step 2: Add a dockerfile
 
-Add the following **Dockerfile** to the root of your project
+Add the following **Dockerfile** to the **root** of your **project**
 
 ~~~docker
 FROM eclipse-temurin:21-jdk-alpine
@@ -312,11 +320,15 @@ COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
 ~~~
 
+> To enhance the security we've added a spring-group and -user to avoid
+> root-access
+
 ---
 
 ### Step 3: Add a docker-compose-file
 
-Add a docker-compose.yml
+Next we add a **compose-file**, this is yaml-file describing **1 or more services**  
+Beside these services you can describe **volumes**, **network**, **startup-dependencies** as we will see later
 
 ```yaml
 services:
@@ -329,9 +341,14 @@ services:
       - "8080:8080"
 ```
 
+Store this file as **docker-compose.yml** in the **root** of your **project**
+
 ---
 
 ### Step 4: Add a simple controller
+
+Once we've set up the Docker-configuration we add some **simple code** in order to test...  
+For this **copy** the following snippet in your **source-folder** 
 
 ~~~java
 package be.demo.docker.hello;
@@ -353,6 +370,8 @@ public class DemoController {
 
 ### Step 5: Perform a build
 
+**Before** to be **able** to create the image/container/**service** we perform a **local** **gradle-build** through the command `./gradlew clean build`
+
 ~~~bash
 $ ./gradlew clean build
 OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
@@ -366,12 +385,15 @@ $
 
 ### Step 5: Build the image
 
+Next we let Docker Compose **prepare** and **build** the **image**.  
+This you can launch through the command  `docker compose build``
+
 ~~~bash
 $ docker compose build
-[+] Building 0.7s (9/9) FINISHED                                                                                                                                        docker:default
+[+] Building 0.7s (9/9) FINISHED docker:default
  => [learning-service internal] load build definition from Dockerfile
  => => transferring dockerfile: 250B
- => [learning-service internal] load metadata for docker.io/library/eclipse-temurin:21-jdk-alpine                                                                                 0.5s
+ => [learning-service internal] load metadata for docker.io/library/eclipse-temurin:21-jdk-alpine
  => [learning-service internal] load .dockerignore
  => => transferring context: 2B
  => [learning-service 1/3] FROM docker.io/library/eclipse-temurin:21-jdk-alpine@sha256:49...
@@ -391,6 +413,8 @@ $
 
 ### Step 6: Build and run the container
 
+To start the service you just defined
+
 ~~~bash
 $ docker compose up
 [+] Running 1/0
@@ -409,13 +433,30 @@ demo_application  | 2024-11-25T22:34:19.265Z  INFO 1 --- [demo] [           main
 
 ----
 
-### Important tip: build and run
+### Step 7: Stopping the services
 
-* You can also combine build and run in one command
+In order to stop the service you just perform a ctrl-c, this will stop the service(s) defined in you compose-file.
 
 ~~~bash
-$ docker compose up --build
+Aborting on container exit...
+[+] Stopping 1/1
+ ✔ Container demo_application  Stopped  0.3s 
+canceled
+$
 ~~~
+
+---
+
+### Important tip: build and run
+
+So far we need 3 steps:
+
+* Building your application
+* Building the container through `docker compose build`
+* Starting the services through `docker compose up`
+
+You can however also combine build and run in one command.  
+The command `docker compose up --build` ensures that you will always rebuild your application.
 
 ----
 
