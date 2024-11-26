@@ -584,18 +584,33 @@ services:
 
 The big difference with the previous example:
 
-* A second service (database) has been added
-* A startup dependency has been added from the application to the db
-* Environment variables has been added to configure both services
-  * In Spring Boot this will bind to values in the property-file
-* Volumes are used mounting some mutable disk space for the database and the logs
+* A **second service** (db) has been **added**
+* A **startup** **dependency** has been **added** from the application to the db
+* **Environment variables** has been added to configure both services
+  * In Spring Boot this will **bind** to values in the **property-file**
+* **Volumes** are used **mounting** some mutable disk space for the database and the logs
 
-> This compose will create a local folder .infra when starting up the db.  
+> This compose will create a local folder *.infra* when starting up the db.  
 > In the demo project I've added *.infra* into your *.gitignore*
 
 ---
 
-### Step 4a: Make an entity and repo
+### Step 4: Let's add some code and configuration
+
+We need add some more code compared to last time:
+
+* HelloMessage-entity
+* HelloRepo for fetching and storing HelloMessages
+* HelloWorldController defining 2 entrypoints
+  * "sayhello" using a query-parameter to pass a message
+  * "listhello" for listing the query-parameters
+* application.properties
+
+> The controller is only using gets just to make it easy to test in the demo
+
+---
+
+#### Step 4a: Make an entity and repo
 
 ~~~java
 package be.demo.docker.hellodb;
@@ -633,7 +648,7 @@ public class HelloMessage {
 
 ----
 
-### Step 4b: Add a repo
+#### Step 4b: Add a repo
 
 ~~~java
 package be.demo.docker.hellodb;
@@ -646,7 +661,7 @@ public interface HelloRepo extends JpaRepository<HelloMessage, Long> {
 
 -----
 
-### Step 4c: Add the controller
+#### Step 4c: Add the controller
 
 ~~~java
 package be.demo.docker.hellodb;
@@ -684,9 +699,11 @@ public class HelloWorldController {
 
 ---
 
-### Step 4d: Override the application-properties
+#### Step 4d: Override the application-properties
 
 * Override the application.properties
+  * Bind to the environment-variables
+  * Configure a logging-directory (using the mounted volume)
 
 ```properties
 spring.application.name=demodb
@@ -711,15 +728,16 @@ $ ./gradlew  clean build -x test
 
 BUILD SUCCESSFUL in 1s
 6 actionable tasks: 6 executed
-bart@linuxcomputers:~/Downloads/demodb$ 
 $
 ~~~
 
-> For now we skip tests because the database is not available
+> For now we skip tests because the database is not available and required when you load the Spring Context
 
 ---
 
 ### Step 6: Run and build the compose
+
+We perform the build and startup in 1 command: `docker compose up --build`
 
 ```bash
 $ docker compose up --build
@@ -742,6 +760,10 @@ $
 
 ### Step 7: test
 
+If the previous (boot-step) went well, we perform a test:
+
+> The demo is using curl but you can just use the browser if that's more convenient
+
 ~~~bash
 $ curl http://localhost:8080/sayhello?hello=first_message
 You said first_message
@@ -759,11 +781,19 @@ $
 
 ## Part 3: split the compose file to allow for native development
 
+What if you want to run only one part:
+
+* Run and debug your application in your favourite IDE
+* Use only DB-part
+
+Compose-files allow you to modularize the services into separte files.  
+In this example will separate the database-service-definition, so let's get started...
+
 ---
 
-### Create a separate compose-file for database
+### Step 1: Create a separate compose-file for database
 
-* Copy the database-part in a docker-compose-db.yml
+* Copy the database-part into a separate docker-compose-db.yml
 
 ```yaml
 services:
@@ -786,10 +816,10 @@ services:
 
 ---
 
-### Split compose
+### Step 2: Split compose
 
 * Remove the db-part from the original yml
-* Provide an include
+* But provide an include-directive pointing to the new file
 
 ```yaml
 include:
@@ -797,41 +827,67 @@ include:
 services:
   learning-service:
     container_name: demodb_application
-    depends_on:
-      db:
-        condition: service_started
-    build:
-      dockerfile: Dockerfile
-    image: db_demo_application:latest
-    environment:
-      - TZ=Europe/Brussels
-      - DB_HOST=mysql_learning
-      - DB_NAME=learning_db
-      - DB_USERNAME=learning
-      - DB_PASSWORD=learning
-      - DB_PORT=3306
-    ports:
-      - "8080:8080"
-    expose:
-      - "8080"
-    volumes:
-      - ./infra_/logs/:/logs/
+   ...
 ```
+
 ---
 
-### Run the application
+### Step 3: Test for regression
 
-* Run the dedicated docker-compose only
+Ensure that your application is still running by **booting** it once again
 
 ```bash
-$ docker compose -f docker-compose-db.yml up --build
+$ docker compose up --build
 ```
+
+And stop it through **ctrl-c**
 
 ---
 
-### Run the application
+### Step 4: Test by running only the db-part
+
+* Run the dedicated docker-compose only
+* For this you have an **-f**-argument to indicate the specific compose-file
+
+```bash
+bartvoe@CI00327265 demo % docker compose -f docker-compose-db.yml up --build
+[+] Building 0.0s (0/ docker:desktop-linux
+[+] Running 2/2
+ ✔ Network demo_default      Created  0.1s 
+ ✔ Container mysql_learning  Created  0.1s 
+Attaching to mysql_learning
+mysql_learning  | 2024-11-26 11:50:35+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 9.1.0-1.el9 started.
+mysql_learning  | 2024-11-26 11:50:35+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+mysql_learning  | 2024-11-26 11:50:35+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 9.1.0-1.el9 started.
+...
+```
+
+* Only the database should start
+
+---
+
+### Step 5: Run the application
+
+* To complete you could start directly the application natively onto your machine
+* e.g. you can start up by issuing the following cmd-line
 
 ```bash
  java -DDB_PORT=3306 -DDB_USERNAME=learning -DDB_PASSWORD=learning -DDB_NAME=learning_db -DDB_HOST=localhost  -jar build/libs/*-SNAPSHOT.jar 
 ```
 
+> You can naturally do the same thing through your IDE by configuring the environment variables...
+
+---
+
+## Next parts
+
+You can **still** start **refining** al lot from here onwards.  
+
+By e.g. using Spring profiles you can configure a standard application.properties for local usage and specialized versions for the docker-variations... 
+
+The aim of this talk was however to give a basic introduction and to enable you:
+
+* To set up basic simple images/containers
+* Automate it for local development through compose
+
+If you want to go further and see how you can put in a production-environment don't forget to subscribe to the next sessions...
