@@ -395,6 +395,8 @@ public class DemoController {
 
 **Before** to be **able** to create the image/container/**service** we perform a **local** **gradle-build** through the command `./gradlew clean build`
 
+> For this part you need to start a command-line at the root of your project (for this and next steps)
+
 ~~~bash
 $ ./gradlew clean build
 OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
