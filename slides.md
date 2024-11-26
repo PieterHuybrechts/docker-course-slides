@@ -34,6 +34,11 @@ theme: default
 ---
 
 # Create your first Docker container
+![image](./resources/Untitled.png)
+
+---
+
+# Create your first Docker container
 
 ## Dockerfile
 
