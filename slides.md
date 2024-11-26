@@ -281,6 +281,8 @@ docker build --build-arg JAR_FILE=build/libs/k8s-demo-0.0.1-SNAPSHOT.jar -t demo
 
 # Docker Compose
 
+## What?
+
 - Define **multi container** applications
 - **Centralize** configuration in 1 yaml file
 - Is **not K8s**, it **lacks** **production**-features like
@@ -293,28 +295,38 @@ docker build --build-arg JAR_FILE=build/libs/k8s-demo-0.0.1-SNAPSHOT.jar -t demo
     - middleware, databases without installation
     - closest **simple** thing to production... 
 
-Let's get started...
+---
+
+## Docker Compose "in practice"
+
+Next follow a couple of simple demo's you can **participate** during the sessions.  
+
+Ideally you have cloned the markdown-version of this presentation making it easy to copy/paste some code-snippets at
+https://github.com/PieterHuybrechts/docker-course-slides
+
+> In case you just want to see the final result you can just checkout
+> https://github.com/bartvoet/docker-springboot-demo
 
 ---
 
 ## Part 1: create a simple application
 
-* Idea is to create: 
+* So let's **get started** with 
   * A **simple Spring Boot** applciation
   * Only **1** image/container/**service**
-  * Just to **demonstrate** the mechanics behind Docker Compose
+  * Just to **demonstrate** the **mechanics** behind Docker **Compose**
 
 ---
 
 ### Step 1: Create a Spring Boot application
 
-* As a first step let's create a **simple Spring Boot-app**
+* As a first step let's create a **simple Spring Boot-app** itself
 * As a starting-point use the following link to create a simple Spring Boot-app through **Spring Initializr**
 
 https://start.spring.io/#!type=gradle-project&language=java&platformVersion=3.4.0&packaging=jar&jvmVersion=21&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=be.demo.docker.hello&dependencies=web
 
-> In Spring Initialzr Click **"Generate"** and **download** and
-> **import** the application into your favorite IDE or editor
+* In Spring Initialzr Click **"Generate"** and **download**  
+* Next **import** the application into your favorite IDE or editor
 
 ---
 
@@ -442,7 +454,7 @@ demo_application  |  =========|_|==============|___/=/_/_/_/
 demo_application  | 2024-11-25T22:34:19.265Z  INFO 1 --- [demo] [           main] be.demo.docker.hello.DemoApplication     : Started DemoApplication in 1.784 seconds (process running for 2.237)
 ~~~
 
-This will start up your define services
+This will start up services you defined in the compose-file
 
 ----
 
@@ -475,7 +487,7 @@ The command `docker compose up --build` ensures that you will always rebuild you
 
 ### Important tip: IDE-support for docker-compose
 
-(running the docker-compose directly)
+* Needless to say is that most IDE's have direct support (or through plugins) for Docker and Docker Compose
 
 ![](intellij-plugin.png)
 
@@ -485,8 +497,11 @@ The command `docker compose up --build` ensures that you will always rebuild you
 
 ## Part 2: create a "composed" application
 
-* Java-application
-* Database (mysql)
+In the next part we will extend this to a **composed** application containing
+
+* A Spring Boot-application  
+  (similar but with JPA)
+* Database (MySql)
 
 Let's get started
 
@@ -494,13 +509,11 @@ Let's get started
 
 ### Step 1: Create a (new) Spring Boot application
 
-* Use the following link to create a simple Spring Boot-app through **Spring Initializr**
-
-> jpa-starter + mysql-driver has been added
+* Use the following link to create a simple Spring Boot-app through **Spring Initializr** (same as before but with jpa-starter + mysql-driver)
 
 https://start.spring.io/#!type=gradle-project&language=java&platformVersion=3.4.0&packaging=jar&jvmVersion=21&groupId=be.demo.docker&artifactId=demodb&name=demodb&description=Demo%20project%20for%20Spring%20Boot&packageName=be.demo.docker.demodb&dependencies=web,data-jpa,mysql
 
-* Click "Generate" and download
+* Click **"Generate"** and download
 * Import the application into your favorite IDE or editor
 
 ---
@@ -518,13 +531,13 @@ COPY ${JAR_FILE} app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
 ~~~
 
+> This should be the same as before
+
 ---
 
 ### Step 3: Add the (extended) docker-compose-file
 
-Add a docker-compose.yml
-
-> Don't forget to place the .infra into your .gitignore
+Add the following **docker-compose.yml**  
 
 ```yaml
 services:
@@ -564,6 +577,21 @@ services:
     volumes:
       - ./.infra/mysql/storage/_data:/var/lib/mysql
 ```
+
+---
+
+#### Some explanation on step 3
+
+The big difference with the previous example:
+
+* A second service (database) has been added
+* A startup dependency has been added from the application to the db
+* Environment variables has been added to configure both services
+  * In Spring Boot this will bind to values in the property-file
+* Volumes are used mounting some mutable disk space for the database and the logs
+
+> This compose will create a local folder .infra when starting up the db.  
+> In the demo project I've added *.infra* into your *.gitignore*
 
 ---
 
@@ -660,7 +688,7 @@ public class HelloWorldController {
 
 * Override the application.properties
 
-~~~properties
+```properties
 spring.application.name=demodb
 
 spring.jpa.hibernate.ddl-auto=update
@@ -670,7 +698,7 @@ spring.datasource.username=${DB_PASSWORD}
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
 
 logging.file.path=/logs/measurements.log
-~~~
+```
 
 ---
 
@@ -693,7 +721,7 @@ $
 
 ### Step 6: Run and build the compose
 
-~~~bash
+```bash
 $ docker compose up --build
 ...
 mysql_learning       | 2024-11-25T23:28:10.576494Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.2.0) starting as process 1
@@ -708,7 +736,7 @@ db_demo_application  |   '  |____| .__|_| |_|_| |_\__, | / / / /
 db_demo_application  |  =========|_|==============|___/=/_/_/_/
 ...
 $ 
-~~~
+```
 
 ---
 
@@ -806,3 +834,4 @@ $ docker compose -f docker-compose-db.yml up --build
 ```bash
  java -DDB_PORT=3306 -DDB_USERNAME=learning -DDB_PASSWORD=learning -DDB_NAME=learning_db -DDB_HOST=localhost  -jar build/libs/*-SNAPSHOT.jar 
 ```
+
